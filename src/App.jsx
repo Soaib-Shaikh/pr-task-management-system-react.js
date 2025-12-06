@@ -1,57 +1,70 @@
 import React, { useEffect, useState } from 'react';
 import TaskForm from './Components/TaskForm';
 import TaskList from './Components/TaskList';
-import { addTask, deleteTask, getTasks, toggleTask, updateTask } from './utils/localstorage';
+import Pagination from './Components/Pagination';
+import DashboardStats from './Components/Dashboard';
+import { addTask, deleteTask, getTasks, updateTask } from './utils/localstorage';
+import Navbar from './Components/Navbar';
+import './Components/DarkMode.css';
 
 
 function App() {
   const [task, setTask] = useState({});
   const [taskList, setTaskList] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [editId, setEditId] = useState(null);
   const [data, setData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(() => {
+    const saved = localStorage.getItem('currentPage');
+    return saved ? Number(saved) : 1;
+  });
+  const [editId, setEditId] = useState(null);
+  const [showDashboard, setShowDashboard] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(data.length / itemsPerPage);
 
-  // Load tasks from localStorage
   useEffect(() => {
-    const tasks = getTasks();
+    const tasks = getTasks() || [];
     setTaskList(tasks);
     setData(tasks);
   }, []);
 
-  // Input change handler
+  // Save current page in localStorage
+  useEffect(() => {
+    localStorage.setItem('currentPage', currentPage);
+  }, [currentPage]);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('bg-dark', 'text-light');
+    } else {
+      document.body.classList.remove('bg-dark', 'text-light');
+    }
+  }, [darkMode]);
+
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setTask({ ...task, [name]: value });
   };
 
-  // Add or Update task
   const handleSubmit = (e) => {
     e.preventDefault();
-
-
     if (!editId) {
       const newTask = { ...task, id: Date.now(), createdAt: Date.now(), completed: false };
-      addTask(newTask);
-      setTaskList(prev => [newTask, ...prev]);
-      setData(prev => [newTask, ...prev]);
+      const updatedList = addTask(newTask);
+      setTaskList(updatedList);
+      setData(updatedList);
     } else {
       const updatedList = updateTask(editId, task);
       setTaskList(updatedList);
       setData(updatedList);
       setEditId(null);
     }
-
     setTask({});
     setCurrentPage(1);
-
-
   };
 
   const handleDelete = (id) => {
@@ -72,7 +85,12 @@ function App() {
   };
 
   const handleComplete = (id) => {
-    const updatedList = toggleTask(id);
+    const updatedList = taskList.map(t =>
+      t.id === id
+        ? { ...t, completed: !t.completed, completedAt: !t.completed ? Date.now() : null }
+        : t
+    );
+    localStorage.setItem("tasks", JSON.stringify(updatedList));
     setTaskList(updatedList);
     setData(updatedList);
   };
@@ -80,60 +98,62 @@ function App() {
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase().trim();
     if (!value) return setData(taskList);
-
-
     const filtered = taskList.filter(task =>
       task.title?.toLowerCase().includes(value) ||
       task.description?.toLowerCase().includes(value) ||
-      task.category?.toLowerCase().includes(value)
+      task.category?.toLowerCase().includes(value) ||
+      task.priority?.toLowerCase().includes(value)
     );
-
     setData(filtered);
     setCurrentPage(1);
-
-
   };
 
   const handleSort = (type) => {
-    const sorted = [...data].sort((a, b) =>
-      type === 'asc' ? a.createdAt - b.createdAt : b.createdAt - a.createdAt
-    );
+    let sorted = [...data];
+    if (type === "priority-high") { const order = { High: 1, Medium: 2, Low: 3 }; sorted.sort((a, b) => order[a.priority] - order[b.priority]); }
+    else if (type === "priority-low") { const order = { High: 3, Medium: 2, Low: 1 }; sorted.sort((a, b) => order[a.priority] - order[b.priority]); }
+    else if (type === "asc") sorted.sort((a, b) => a.createdAt - b.createdAt);
+    else if (type === "desc") sorted.sort((a, b) => b.createdAt - a.createdAt);
     setData(sorted);
     setCurrentPage(1);
   };
 
-  const handlePagination = (page) => setCurrentPage(page);
-  const handlePrev = () => currentPage > 1 && setCurrentPage(currentPage - 1);
-  const handleNext = () => currentPage < totalPages && setCurrentPage(currentPage + 1);
-
   return (
-    <div className={`container mt-3 ${darkMode ? 'dark-mode' : ''}`}>
-      <div className="d-flex justify-content-end mb-3">
-        <button className="btn btn-secondary" onClick={() => setDarkMode(prev => !prev)}>
-          {darkMode ? 'Light Mode' : 'Dark Mode'} </button> </div>
+    <>
+      <Navbar darkMode={darkMode} toggleDarkMode={() => setDarkMode(!darkMode)} />
+      <div className={`container mt-3 ${darkMode ? 'bg-dark text-light' : ''}`}>
 
-      <TaskForm
-        task={task}
-        handleChange={handleChange}
-        handleSubmit={handleSubmit}
-      />
+        <div className="mb-3">
+          <button className="btn btn-outline-primary" onClick={() => setShowDashboard(!showDashboard)}>
+            {showDashboard ? "Hide Dashboard" : "Show Dashboard"}
+          </button>
+        </div>
 
-      <TaskList
-        list={currentItems}
-        handleDelete={handleDelete}
-        handleEdit={handleEdit}
-        handleComplete={handleComplete}
-        handleSearch={handleSearch}
-        handleSort={handleSort}
-        currentPage={currentPage}
-        startIndex={indexOfFirstItem}
-        totalPages={totalPages}
-        handlePagination={handlePagination}
-        handlePrev={handlePrev}
-        handleNext={handleNext}
-      />
-    </div>
+        {showDashboard && <DashboardStats tasks={taskList} />}
 
+        <TaskForm task={task} handleChange={handleChange} handleSubmit={handleSubmit} />
+
+        <TaskList
+          list={currentItems}
+          handleDelete={handleDelete}
+          handleEdit={handleEdit}
+          handleComplete={handleComplete}
+          handleSearch={handleSearch}
+          handleSort={handleSort}
+          currentPage={currentPage}
+          startIndex={indexOfFirstItem}
+          totalPages={Math.ceil(data.length / itemsPerPage)}
+          handlePagination={(page) => setCurrentPage(page)}
+        />
+
+        <Pagination
+          totalItems={data.length}
+          itemsPerPage={itemsPerPage}
+          currentPage={currentPage}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
+      </div>
+    </>
   );
 }
 

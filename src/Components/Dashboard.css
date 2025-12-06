@@ -1,0 +1,23 @@
+.stat-card {
+  min-width: 180px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.stats-cards .card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.list-group-item {
+  border: none;
+  padding: 0.3rem 0.5rem;
+  background: transparent;
+}

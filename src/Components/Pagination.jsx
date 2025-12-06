@@ -1,43 +1,37 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
-const DashboardStats = ({ tasks }) => {
-const totalTasks = tasks.length;
-const completedTasks = tasks.filter(t => t.completed).length;
-const pendingTasks = totalTasks - completedTasks;
+const Pagination = ({ totalItems, itemsPerPage, currentPage, onPageChange }) => {
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-// Get categories dynamically
-const categories = [...new Set(tasks.map(t => t.category))];
+  const handlePrev = () => {
+    if (currentPage > 1) onPageChange(currentPage - 1);
+  };
 
-return ( <div className="dashboard"> <h2>Dashboard</h2> <div className="stats-cards"> <div className="card mb-3"> <div className="card-body"> <h5>Total Tasks</h5> <p>{totalTasks}</p> </div> </div>
+  const handleNext = () => {
+    if (currentPage < totalPages) onPageChange(currentPage + 1);
+  };
 
+  return (
+    <div className="d-flex justify-content-center mt-3">
+      <button className="btn btn-outline-secondary me-2" disabled={currentPage === 1} onClick={handlePrev}>
+        Prev
+      </button>
 
-    <div className="card mb-3">
-      <div className="card-body">
-        <h5>Completed Tasks</h5>
-        <p>{completedTasks}</p>
-      </div>
+      {[...Array(totalPages)].map((_, i) => (
+        <button
+          key={i}
+          className={`btn mx-1 ${currentPage === i + 1 ? "btn-primary" : "btn-outline-primary"}`}
+          onClick={() => onPageChange(i + 1)}
+        >
+          {i + 1}
+        </button>
+      ))}
+
+      <button className="btn btn-outline-secondary ms-2" disabled={currentPage === totalPages} onClick={handleNext}>
+        Next
+      </button>
     </div>
-
-    <div className="card mb-3">
-      <div className="card-body">
-        <h5>Pending Tasks</h5>
-        <p>{pendingTasks}</p>
-      </div>
-    </div>
-
-    <div className="card mb-3">
-      <div className="card-body">
-        <h5>Categories</h5>
-        <ul>
-          {categories.map((cat, i) => <li key={i}>{cat}</li>)}
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-);
+  );
 };
 
-export default DashboardStats;
+export default Pagination;

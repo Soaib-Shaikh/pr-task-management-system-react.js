@@ -1,147 +1,93 @@
-import React from 'react'
+import React from "react";
+import { FaTrash, FaEdit, FaSearch, FaSort } from "react-icons/fa";
 
-const TaskList = ({
-  list,
-  totalPages,
-  handleDelete,
-  handleEdit,
-  handleComplete,
-  handleSearch,
-  currentPage,
-  startIndex,
-  handlePagination,
-  handlePrev,
-  handleNext,
-  handleSort
-}) => {
+const TaskList = ({ list, handleDelete, handleEdit, handleComplete, handleSearch, handleSort, startIndex, darkMode }) => {
+
+  const getStatusBadge = (task) => {
+    const today = new Date().setHours(0,0,0,0);
+    const due = new Date(task.dueDate).setHours(0,0,0,0);
+
+    if(task.completed){
+      if(task.completedAt && task.completedAt<=due) return <span className="badge bg-success">Completed (On Time)</span>
+      return <span className="badge bg-warning text-dark">Completed (Late)</span>
+    }
+    if(!task.completed && due<today) return <span className="badge bg-danger">Overdue</span>
+    return <span className="badge bg-info">Pending</span>
+  }
+
   return (
     <>
-      <div className="row d-flex justify-content-center mt-3">
-        <div className="col-6">
-          <input
-            type="text"
-            placeholder="Search by title, description or category"
-            className="form-control mb-3"
-            onChange={handleSearch}
-          />
+      <div className="row justify-content-center mt-4">
+        <div className="col-md-4">
+          <div className="input-group shadow-sm">
+            <span className="input-group-text"><FaSearch /></span>
+            <input type="text" className={`form-control ${darkMode?'dark-mode':''}`} placeholder="Search tasks..." onChange={handleSearch} />
+          </div>
         </div>
-        <div className="col-6 d-flex gap-2">
 
-          <button
-            className="btn btn-outline-primary"
-            onClick={() => handleSort("asc")}
-          >
-            Sort: First → Last
-          </button>
-
-          <button
-            className="btn btn-outline-primary"
-            onClick={() => handleSort("desc")}
-          >
-            Sort: Last → First
-          </button>
-
-        </div>
+        <div className="col-md-3 ms-2"> 
+          <select className={`form-select shadow-sm ${darkMode?'dark-mode':''}`} onChange={(e)=>handleSort(e.target.value)}> 
+            <option value="" selected disabled>Sort By</option> 
+            <option value="priority-high">Priority: High → Low</option> 
+            <option value="priority-low">Priority: Low → High</option> 
+            <option value="asc">Creation Date: Old → New</option> 
+            <option value="desc">Creation Date: New → Old</option> 
+          </select> 
+      </div>
       </div>
 
-      <div className="row justify-content-center mt-3">
-        <div className="col-10">
-          <h5>Task List</h5>
+       
+      
 
-          <table className='table table-bordered table-hover table-responsive table-striped text-center caption-top'>
-            <thead>
-              <tr>
-                <th>Sr. No</th>
-                <th>Task Name</th>
-                <th>Task Description</th>
-                <th>Category</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
+      <div className="row justify-content-center mt-4">
+        <div className="col-11">
+          <div className={`card shadow-sm border-0 ${darkMode?'dark-mode':''}`}>
+            <div className="card-header bg-secondary text-white">
+              <h5 className="mb-0">Task List</h5>
+            </div>
 
-            <tbody>
-              {
-                list.length > 0 ? list.map((val, index) => (
-                  <tr key={val.id}>
-                    <td>{startIndex + index + 1}</td>
-
-                    <td style={{ textDecoration: val.completed ? "line-through" : "none" }}>
-                      {val.title}
-                    </td>
-
-                    <td style={{ textDecoration: val.completed ? "line-through" : "none" }}>
-                      {val.description}
-                    </td>
-
-                    <td style={{ textDecoration: val.completed ? "line-through" : "none" }}>
-                      {val.category}
-                    </td>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={val.completed}
-                        onChange={() => handleComplete(val.id)}
-                      />
-                      {val.completed ? " Completed" : " Pending"}
-                    </td>
-                    <td>
-                      <button className='btn btn-outline-danger me-2'
-                        onClick={() => handleDelete(val.id)}
-                        disabled={!val.completed}
-                      >
-                        Delete
-                      </button>
-
-                      <button className='btn btn-outline-warning'
-                        onClick={() => handleEdit(val.id)}
-                      >
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                )) :
+            <div className="card-body p-0">
+              <table className={`table table-hover table-striped mb-0 text-center ${darkMode?'table-dark-mode':''}`}>
+                <thead className="table-dark">
                   <tr>
-                    <td colSpan={6}>No tasks found.</td>
+                    <th>#</th>
+                    <th>Task</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Done</th>
+                    <th>Action</th>
                   </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="row justify-content-center mt-3">
-        <div className="col-12 d-flex gap-2 flex-wrap justify-content-center">
-
-          <button
-            className='btn btn-outline-secondary'
-            onClick={handlePrev}
-            disabled={currentPage === 1}
-          >
-            ◀ Prev
-          </button>
-
-          {[...Array(totalPages)].map((_, index) => {
-            const pageNum = index + 1;
-            return (
-              <button
-                key={index}
-                onClick={() => handlePagination(pageNum)}
-                className={`btn ${currentPage === pageNum ? 'btn-primary' : 'btn-outline-primary'}`}
-              >
-                {pageNum}
-              </button>
-            )
-          })}
-
-          <button
-            className='btn btn-outline-secondary'
-            onClick={handleNext}
-            disabled={currentPage === totalPages || totalPages === 0}
-          >
-            Next ▶
-          </button>
-
+                </thead>
+                <tbody>
+                  {list.length>0 ? list.map((val,index)=>(
+                    <tr key={val.id}>
+                      <td>{startIndex+index+1}</td>
+                      <td style={{textDecoration: val.completed?'line-through':'none'}}>{val.title}</td>
+                      <td style={{textDecoration: val.completed?'line-through':'none'}}>{val.description}</td>
+                      <td><span className="badge bg-info">{val.category}</span></td>
+                      <td>
+                        <span className={
+                          val.priority==="High" ? "badge bg-danger" :
+                          val.priority==="Medium" ? "badge bg-warning text-dark" :
+                          "badge bg-success"
+                        }>{val.priority}</span>
+                      </td>
+                      <td><span className="badge bg-dark">{val.dueDate}</span></td>
+                      <td>{getStatusBadge(val)}</td>
+                      <td><input type="checkbox" className="form-check-input" checked={val.completed} onChange={()=>handleComplete(val.id)}/></td>
+                      <td>
+                        <button className="btn btn-sm btn-outline-warning me-2" onClick={()=>handleEdit(val.id)}><FaEdit/></button>
+                        <button className="btn btn-sm btn-outline-danger" disabled={!val.completed} onClick={()=>handleDelete(val.id)}><FaTrash/></button>
+                      </td>
+                    </tr>
+                  )) : <tr><td colSpan="9" className="py-4">No tasks found.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </>

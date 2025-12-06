@@ -1,0 +1,35 @@
+/* Backgrounds */
+body.dark-mode, .bg-dark, .bg-secondary {
+    background-color: #121212 !important;
+    color: #e0e0e0 !important;
+}
+
+/* Cards & forms */
+.card.dark-mode, .form-control.dark-mode {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #333;
+}
+
+/* Buttons */
+.btn-dark-mode, .btn-outline-secondary {
+    background-color: #333;
+    color: #e0e0e0;
+    border-color: #555;
+}
+
+/* Table */
+.table-dark-mode {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #333;
+}
+
+/* Links */
+a.nav-link.dark-mode {
+    color: #e0e0e0;
+}
+
+a.nav-link.dark-mode:hover {
+    color: #fff;
+}
