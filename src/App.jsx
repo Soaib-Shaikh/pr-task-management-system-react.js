@@ -3,10 +3,9 @@ import TaskForm from './Components/TaskForm';
 import TaskList from './Components/TaskList';
 import Pagination from './Components/Pagination';
 import DashboardStats from './Components/Dashboard';
-import { addTask, deleteTask, getTasks, updateTask } from './utils/localstorage';
 import Navbar from './Components/Navbar';
+import { addTask, deleteTask, getTasks, updateTask, toggleTask } from './utils/localstorage';
 import './Components/DarkMode.css';
-
 
 function App() {
   const [task, setTask] = useState({});
@@ -26,12 +25,11 @@ function App() {
   const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
 
   useEffect(() => {
-    const tasks = getTasks() || [];
+    const tasks = getTasks();
     setTaskList(tasks);
     setData(tasks);
   }, []);
 
-  // Save current page in localStorage
   useEffect(() => {
     localStorage.setItem('currentPage', currentPage);
   }, [currentPage]);
@@ -43,7 +41,6 @@ function App() {
       document.body.classList.remove('bg-dark', 'text-light');
     }
   }, [darkMode]);
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -69,6 +66,10 @@ function App() {
 
   const handleDelete = (id) => {
     const found = taskList.find(t => t.id === id);
+    if (!found) {
+      alert("Task not found!");
+      return;
+    }
     if (!found.completed) {
       alert("Only completed tasks can be deleted.");
       return;
@@ -80,17 +81,13 @@ function App() {
 
   const handleEdit = (id) => {
     const found = taskList.find(t => t.id === id);
+    if (!found) return;
     setTask(found);
     setEditId(id);
   };
 
   const handleComplete = (id) => {
-    const updatedList = taskList.map(t =>
-      t.id === id
-        ? { ...t, completed: !t.completed, completedAt: !t.completed ? Date.now() : null }
-        : t
-    );
-    localStorage.setItem("tasks", JSON.stringify(updatedList));
+    const updatedList = toggleTask(id);
     setTaskList(updatedList);
     setData(updatedList);
   };
@@ -110,10 +107,17 @@ function App() {
 
   const handleSort = (type) => {
     let sorted = [...data];
-    if (type === "priority-high") { const order = { High: 1, Medium: 2, Low: 3 }; sorted.sort((a, b) => order[a.priority] - order[b.priority]); }
-    else if (type === "priority-low") { const order = { High: 3, Medium: 2, Low: 1 }; sorted.sort((a, b) => order[a.priority] - order[b.priority]); }
-    else if (type === "asc") sorted.sort((a, b) => a.createdAt - b.createdAt);
-    else if (type === "desc") sorted.sort((a, b) => b.createdAt - a.createdAt);
+    if (type === "priority-high") {
+      const order = { High: 1, Medium: 2, Low: 3 };
+      sorted.sort((a, b) => order[a.priority] - order[b.priority]);
+    } else if (type === "priority-low") {
+      const order = { High: 3, Medium: 2, Low: 1 };
+      sorted.sort((a, b) => order[a.priority] - order[b.priority]);
+    } else if (type === "asc") {
+      sorted.sort((a, b) => a.createdAt - b.createdAt);
+    } else if (type === "desc") {
+      sorted.sort((a, b) => b.createdAt - a.createdAt);
+    }
     setData(sorted);
     setCurrentPage(1);
   };
@@ -121,13 +125,9 @@ function App() {
   return (
     <>
       <Navbar darkMode={darkMode} toggleDarkMode={() => setDarkMode(!darkMode)} />
-      <div className={`container mt-3 ${darkMode ? 'bg-dark text-light' : ''}`}>
-
-        <div className="mb-3">
-          <button className="btn btn-outline-primary" onClick={() => setShowDashboard(!showDashboard)}>
-            {showDashboard ? "Hide Dashboard" : "Show Dashboard"}
-          </button>
-        </div>
+      <div className={`container mt-3 ${darkMode ? 'bg-dark text-light' : ''}`}> <div className="mb-3">
+        <button className="btn btn-outline-primary" onClick={() => setShowDashboard(!showDashboard)}>
+          {showDashboard ? "Hide Dashboard" : "Show Dashboard"} </button> </div>
 
         {showDashboard && <DashboardStats tasks={taskList} />}
 
@@ -154,6 +154,8 @@ function App() {
         />
       </div>
     </>
+
+
   );
 }
 
