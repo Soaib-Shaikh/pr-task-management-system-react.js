@@ -3,7 +3,7 @@ import TaskForm from './Components/TaskForm';
 import TaskList from './Components/TaskList';
 import Pagination from './Components/Pagination';
 import DashboardStats from './Components/Dashboard';
-import { addTask, deleteTask, getTasks, updateTask } from './utils/LocalStorage';
+import { addTask, deleteTask, getTasks, updateTask } from './utils/localstorage';
 import Navbar from './Components/Navbar';
 import './Components/DarkMode.css';
 
